@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: zzz-user
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/user?useUnicode=yes&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+      username: root
+      password: 123456
+      connection-properties: config.decrypt=false
+      initial-size: 10
+      max-active: 200
+      min-idle: 5
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 30000
+      validation-query: select 'x'
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: false
+      filters: stat,wall
+      filter:
+        config:
+          enabled: true
+mybatis:
+  configuration:
+    mapUnderscoreToCamelCase: true
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/**Mapper.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+zf:
+  feign:
+    leaf: http://localhost:9080
+logging:
+  level:
+    "com.zzycreate.zf.feign.IdApi": INFO

@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.zzycreate</groupId>
     <artifactId>zzz-user</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -20,20 +20,51 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.zzycreate</groupId>
+      <artifactId>zzz-user-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zzycreate</groupId>
+      <artifactId>zf-mybatis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zzycreate</groupId>
+      <artifactId>zf-swagger</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zzycreate</groupId>
+      <artifactId>zf-utils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zzycreate</groupId>
+      <artifactId>zf-feign</artifactId>
+    </dependency>
+
+    <!-- spring -->
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+
+    <!-- test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.junit.vintage</groupId>
-          <artifactId>junit-vintage-engine</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

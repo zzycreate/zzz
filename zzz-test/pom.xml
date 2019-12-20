@@ -6,13 +6,13 @@
   <parent>
     <groupId>com.zzycreate</groupId>
     <artifactId>zzz</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
   <artifactId>zzz-test</artifactId>
   <packaging>pom</packaging>
-  <version>${revision}</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <name>zzz test</name>
   <description>a test project for zzz.</description>

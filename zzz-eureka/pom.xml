@@ -5,13 +5,13 @@
   <parent>
     <groupId>com.zzycreate</groupId>
     <artifactId>zzz</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
   <artifactId>zzz-eureka</artifactId>
   <packaging>jar</packaging>
-  <version>${revision}</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <name>zzz-eureka</name>
   <description>zzz eureka server</description>

@@ -13,16 +13,13 @@
   <groupId>com.zzycreate</groupId>
   <artifactId>zzz</artifactId>
   <packaging>pom</packaging>
-  <version>${revision}</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <name>zzz</name>
   <description>zzz root application</description>
 
   <modules>
-    <module>zzz-dependencies</module>
-    <module>zzz-core</module>
     <module>zzz-test</module>
-    <module>zzz-utils</module>
     <module>zzz-eureka</module>
     <module>zzz-user</module>
   </modules>
@@ -31,7 +28,8 @@
     <revision>1.0.0-SNAPSHOT</revision>
     <main.basedir>${basedir}</main.basedir>
     <java.version>1.8</java.version>
-    <zzz-dependencies.version>1.0.0-SNAPSHOT</zzz-dependencies.version>
+    <zf.version>1.0.0-SNAPSHOT</zf.version>
+    <zzz-user-api.version>1.0.0-SNAPSHOT</zzz-user-api.version>
 
     <!-- Plugin versions -->
     <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
@@ -56,16 +54,15 @@
     <dependencies>
       <dependency>
         <groupId>com.zzycreate</groupId>
-        <artifactId>zzz-dependencies</artifactId>
-        <version>${zzz-dependencies.version}</version>
+        <artifactId>zf</artifactId>
+        <version>${zf.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-
       <dependency>
         <groupId>com.zzycreate</groupId>
-        <artifactId>zzz-core</artifactId>
-        <version>${revision}</version>
+        <artifactId>zzz-user-api</artifactId>
+        <version>${zzz-user-api.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
