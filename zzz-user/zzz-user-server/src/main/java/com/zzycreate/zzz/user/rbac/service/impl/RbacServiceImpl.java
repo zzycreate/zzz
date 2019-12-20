@@ -1,32 +1,36 @@
 package com.zzycreate.zzz.user.rbac.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.zzycreate.zf.core.exception.ServiceException;
 import com.zzycreate.zf.feign.IdApi;
 import com.zzycreate.zzz.user.common.constants.IdEnums;
 import com.zzycreate.zzz.user.rbac.bo.PermBO;
+import com.zzycreate.zzz.user.rbac.bo.PermCreateBO;
+import com.zzycreate.zzz.user.rbac.bo.PermUpdateBO;
 import com.zzycreate.zzz.user.rbac.bo.RoleBO;
 import com.zzycreate.zzz.user.rbac.bo.RoleCreateBO;
 import com.zzycreate.zzz.user.rbac.bo.RoleUpdateBO;
-import com.zzycreate.zzz.user.rbac.mapper.UserRoleMapper;
 import com.zzycreate.zzz.user.rbac.mapper.PermMapper;
 import com.zzycreate.zzz.user.rbac.mapper.RoleMapper;
 import com.zzycreate.zzz.user.rbac.mapper.RolePermMapper;
-import com.zzycreate.zzz.user.rbac.mapstruct.PermMapping;
-import com.zzycreate.zzz.user.rbac.mapstruct.RoleMapping;
-import com.zzycreate.zzz.user.rbac.po.UserRole;
+import com.zzycreate.zzz.user.rbac.mapper.UserRoleMapper;
+import com.zzycreate.zzz.user.rbac.mapstruct.PermMapstruct;
+import com.zzycreate.zzz.user.rbac.mapstruct.RoleMapstruct;
 import com.zzycreate.zzz.user.rbac.po.Perm;
 import com.zzycreate.zzz.user.rbac.po.Role;
 import com.zzycreate.zzz.user.rbac.po.RolePerm;
+import com.zzycreate.zzz.user.rbac.po.UserRole;
 import com.zzycreate.zzz.user.rbac.service.RbacService;
-import com.zzycreate.zzz.utils.Jsr303Utils;
+import com.zzycreate.zzz.utils.LambdaHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,8 +47,6 @@ import java.util.stream.Collectors;
 @Service
 public class RbacServiceImpl implements RbacService {
 
-    private static final String DEFAULT_ROLE_CUST_NO = "SYSTEM";
-
     @Resource
     private UserRoleMapper userRoleMapper;
     @Resource
@@ -55,33 +57,102 @@ public class RbacServiceImpl implements RbacService {
     private PermMapper permMapper;
 
     @Resource
-    private IService<UserRole> bindingRoleServiceMapper;
-
-    @Resource
     private IdApi idApi;
 
+    // ---------------- permission ----------------
+
     @Override
-    public void bindPerm(Long roleId, List<Long> permIdList) {
-        if (roleId == null) {
-            throw new ServiceException("角色ID不能为空");
+    public PermBO addPerm(@Valid PermCreateBO permCreate) {
+        Perm perm = PermMapstruct.INSTANCE.createToPo(permCreate);
+        Long permId = this.idApi.getId(IdEnums.PERM_ID.getKey());
+        perm.setPermId(permId);
+        this.permMapper.insert(perm);
+        return this.getPerm(permId);
+    }
+
+    @Override
+    public PermBO updatePerm(@Valid @NotNull(message = "权限ID不能为空") Long permId, PermUpdateBO permUpdate) {
+        if (StringUtils.isBlank(permUpdate.getPermName()) && StringUtils.isBlank(permUpdate.getPermCode())
+                && StringUtils.isBlank(permUpdate.getPermDescription())) {
+            return this.getPerm(permId);
         }
-        if (CollectionUtils.isEmpty(permIdList)) {
-            throw new ServiceException("权限ID不能为空");
+
+        LambdaUpdateWrapper<Perm> wrapper = Wrappers.<Perm>lambdaUpdate()
+                .set(StringUtils.isNotBlank(permUpdate.getPermName()), Perm::getPermName, permUpdate.getPermName())
+                .set(StringUtils.isNotBlank(permUpdate.getPermCode()), Perm::getPermCode, permUpdate.getPermCode())
+                .set(StringUtils.isNotBlank(permUpdate.getPermDescription()),
+                        Perm::getPermDescription, permUpdate.getPermDescription())
+                .eq(Perm::getPermId, permId);
+        this.permMapper.update(null, wrapper);
+
+        return this.getPerm(permId);
+    }
+
+    @Override
+    public void deletePerm(Long permId) {
+        if (permId != null) {
+            this.permMapper.delete(Wrappers.<Perm>lambdaQuery().eq(Perm::getPermId, permId));
+            this.rolePermMapper.delete(Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getPermId, permId));
         }
-        // 移除perm表中不存在的permId
-        List<Perm> permDos =
-                this.permMapper.selectList(Wrappers.<Perm>lambdaQuery().in(Perm::getPermId, permIdList));
-        List<Long> permIdInDbp = permDos.stream().map(Perm::getPermId).collect(Collectors.toList());
-        List<Long> filter1 = permIdList.stream().filter(permIdInDbp::contains).collect(Collectors.toList());
+    }
+
+    @Override
+    public PermBO getPerm(Long permId) {
+        Perm perm = this.permMapper.selectOne(Wrappers.<Perm>lambdaQuery().eq(Perm::getPermId, permId));
+        return perm == null ? null : PermMapstruct.INSTANCE.to(perm);
+    }
+
+    @Override
+    public PermBO getPerm(String permName, String permCode) {
+        if (StringUtils.isBlank(permName) || StringUtils.isBlank(permCode)) {
+            return null;
+        }
+        LambdaQueryWrapper<Perm> wrapper = Wrappers.<Perm>lambdaQuery()
+                .eq(StringUtils.isBlank(permName), Perm::getPermName, permName)
+                .eq(StringUtils.isBlank(permCode), Perm::getPermCode, permCode);
+        Perm perm = this.permMapper.selectOne(wrapper);
+        return perm == null ? null : PermMapstruct.INSTANCE.to(perm);
+    }
+
+    @Override
+    public List<PermBO> getPerms(List<Long> permIds) {
+        if (CollectionUtils.isEmpty(permIds)) {
+            return new ArrayList<>();
+        }
+        List<Perm> perms = this.permMapper.selectList(Wrappers.<Perm>lambdaQuery().in(Perm::getPermId, permIds));
+        return CollectionUtils.isEmpty(perms) ? new ArrayList<>() : PermMapstruct.INSTANCE.to(perms);
+    }
+
+    @Override
+    public List<PermBO> getAllPerms() {
+        List<Perm> perms = this.permMapper.selectList(Wrappers.<Perm>lambdaQuery());
+        return CollectionUtils.isEmpty(perms) ? new ArrayList<>() : PermMapstruct.INSTANCE.to(perms);
+    }
+
+    @Override
+    public Map<Long, PermBO> getPermMap(List<Long> permIds) {
+        List<PermBO> perms = this.getPerms(permIds);
+        return perms.stream().collect(Collectors.toMap(PermBO::getPermId, Function.identity(), (a, b) -> a));
+    }
+
+    // ---------------- role_permission ----------------
+
+    @Override
+    public void bindPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
+                         @Valid @NotEmpty(message = "权限ID不能为空") List<Long> permIdList) {
+        // 移除 perm 表中不存在的 permId
+        List<Long> permIdInP = this.permMapper.selectList(Wrappers.<Perm>lambdaQuery().in(Perm::getPermId, permIdList))
+                .stream().map(Perm::getPermId).collect(Collectors.toList());
+        List<Long> filter1 = permIdList.stream().filter(permIdInP::contains).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(filter1)) {
             return;
         }
 
-        // 移除role_perm表中存在的permId
-        List<RolePerm> rolePermDos = this.rolePermMapper.selectList(Wrappers.<RolePerm>lambdaQuery()
-                .eq(RolePerm::getRoleId, roleId).in(RolePerm::getPermId, filter1));
-        List<Long> permIdInDbrp = rolePermDos.stream().map(RolePerm::getPermId).collect(Collectors.toList());
-        List<Long> filter2 = filter1.stream().filter(id -> !permIdInDbrp.contains(id)).collect(Collectors.toList());
+        // 移除 role_perm 表中存在的 permId
+        List<Long> permIdInRp = this.rolePermMapper.selectList(Wrappers.<RolePerm>lambdaQuery()
+                .eq(RolePerm::getRoleId, roleId).in(RolePerm::getPermId, filter1))
+                .stream().map(RolePerm::getPermId).collect(Collectors.toList());
+        List<Long> filter2 = filter1.stream().filter(id -> !permIdInRp.contains(id)).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(filter2)) {
             return;
         }
@@ -95,56 +166,22 @@ public class RbacServiceImpl implements RbacService {
     }
 
     @Override
-    public void unBindPerm(Long roleId, List<Long> permIdList) {
-        if (roleId == null) {
-            throw new ServiceException("角色ID不能为空");
-        }
-        if (CollectionUtils.isEmpty(permIdList)) {
-            throw new ServiceException("权限ID不能为空");
-        }
-        this.rolePermMapper.delete(Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, roleId)
-                .in(RolePerm::getPermId, permIdList));
+    public void unBindPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
+                           @Valid @NotEmpty(message = "权限ID不能为空") List<Long> permIdList) {
+        this.rolePermMapper.delete(
+                Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, roleId).in(RolePerm::getPermId, permIdList));
     }
 
     @Override
-    public void emptyPerm(Long roleId) {
-        if (roleId == null) {
-            throw new ServiceException("角色ID不能为空");
-        }
+    public void emptyPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId) {
         this.rolePermMapper.delete(Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, roleId));
     }
 
     @Override
-    public void reBindPerm(Long roleId, List<Long> permIdList) {
+    public void reBindPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
+                           @Valid @NotEmpty(message = "权限ID不能为空") List<Long> permIdList) {
         this.emptyPerm(roleId);
         this.bindPerm(roleId, permIdList);
-    }
-
-    @Override
-    public PermBO getPerm(Long permId) {
-        Perm permDo = this.permMapper.selectOne(Wrappers.<Perm>lambdaQuery().eq(Perm::getPermId, permId));
-        return permDo == null ? null : PermMapping.INSTANCE.to(permDo);
-    }
-
-    @Override
-    public List<PermBO> getPerms(List<Long> permIds) {
-        if (CollectionUtils.isEmpty(permIds)) {
-            return new ArrayList<>();
-        }
-        List<Perm> permDos = this.permMapper.selectList(Wrappers.<Perm>lambdaQuery().in(Perm::getPermId, permIds));
-        return CollectionUtils.isEmpty(permDos) ? new ArrayList<>() : PermMapping.INSTANCE.to(permDos);
-    }
-
-    @Override
-    public List<PermBO> getAllPerms() {
-        List<Perm> permDos = this.permMapper.selectList(Wrappers.<Perm>lambdaQuery());
-        return CollectionUtils.isEmpty(permDos) ? new ArrayList<>() : PermMapping.INSTANCE.to(permDos);
-    }
-
-    @Override
-    public Map<Long, PermBO> getPermMap(List<Long> permIds) {
-        List<PermBO> perms = this.getPerms(permIds);
-        return perms.stream().collect(Collectors.toMap(PermBO::getPermId, Function.identity(), (a, b) -> a));
     }
 
     @Override
@@ -161,12 +198,12 @@ public class RbacServiceImpl implements RbacService {
         if (CollectionUtils.isEmpty(roleIdList)) {
             return new HashMap<>(16);
         }
-        List<RolePerm> rolePermDos =
+        List<RolePerm> rolePerms =
                 this.rolePermMapper.selectList(Wrappers.<RolePerm>lambdaQuery().in(RolePerm::getRoleId, roleIdList));
-        Map<Long, List<Long>> rolePermMap = rolePermDos.stream().collect(Collectors.groupingBy(
+        Map<Long, List<Long>> rolePermMap = rolePerms.stream().collect(Collectors.groupingBy(
                 RolePerm::getRoleId, Collectors.mapping(RolePerm::getPermId, Collectors.toList())));
 
-        List<Long> permIds = rolePermDos.stream().map(RolePerm::getPermId).collect(Collectors.toList());
+        List<Long> permIds = rolePerms.stream().map(RolePerm::getPermId).collect(Collectors.toList());
         Map<Long, PermBO> permMap = this.getPermMap(permIds);
         Map<Long, List<PermBO>> result = new HashMap<>(16);
         rolePermMap.forEach((roleId, permIdList) -> {
@@ -179,35 +216,47 @@ public class RbacServiceImpl implements RbacService {
     }
 
     @Override
-    public RoleBO addRole(RoleCreateBO roleCreate) {
-        Jsr303Utils.validate(roleCreate);
-
-        Role roleDo = RoleMapping.INSTANCE.createToDo(roleCreate);
-        roleDo.setRoleId(this.idApi.getId(IdEnums.ROLE_ID.getKey()));
-        this.roleMapper.insert(roleDo);
-
-        return this.getRole(roleDo.getRoleId());
+    public boolean hasPermForRole(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
+                                  @Valid @NotNull(message = "权限ID不能为空") Long permId) {
+        Integer integer = this.rolePermMapper.selectCount(Wrappers.<RolePerm>lambdaQuery()
+                .eq(RolePerm::getRoleId, roleId).eq(RolePerm::getPermId, permId));
+        return integer != null && integer > 0;
     }
 
     @Override
-    public RoleBO updateRole(Long roleId, RoleUpdateBO roleUpdate) {
-        if (StringUtils.isEmpty(roleUpdate.getRoleName()) && StringUtils.isEmpty(roleUpdate.getRoleCode())
-                && StringUtils.isEmpty(roleUpdate.getRoleDescription())) {
-            throw new ServiceException("没有检查到需要更新的内容");
+    public boolean hasPermForRole(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
+                                  String permName, String permCode) {
+        PermBO perm = this.getPerm(permName, permCode);
+        if (perm == null || perm.getPermId() == null) {
+            return false;
+        }
+        return this.hasPermForRole(roleId, perm.getPermId());
+    }
+
+    // ---------------- role ----------------
+
+    @Override
+    public RoleBO addRole(@Valid RoleCreateBO roleCreate) {
+        Role role = RoleMapstruct.INSTANCE.createToPo(roleCreate);
+        Long roleId = this.idApi.getId(IdEnums.ROLE_ID.getKey());
+        role.setRoleId(roleId);
+        this.roleMapper.insert(role);
+        return this.getRole(roleId);
+    }
+
+    @Override
+    public RoleBO updateRole(@Valid @NotNull(message = "角色ID不能为空") Long roleId, RoleUpdateBO roleUpdate) {
+        if (StringUtils.isBlank(roleUpdate.getRoleName()) && StringUtils.isBlank(roleUpdate.getRoleCode())
+                && StringUtils.isBlank(roleUpdate.getRoleDescription())) {
+            return this.getRole(roleId);
         }
 
-        LambdaUpdateWrapper<Role> wrapper = Wrappers.<Role>lambdaUpdate();
-        if (StringUtils.isNotEmpty(roleUpdate.getRoleName())) {
-            wrapper.set(Role::getRoleName, roleUpdate.getRoleName());
-        }
-        if (StringUtils.isNotEmpty(roleUpdate.getRoleCode())) {
-            wrapper.set(Role::getRoleCode, roleUpdate.getRoleCode());
-        }
-        if (StringUtils.isNotEmpty(roleUpdate.getRoleDescription())) {
-            wrapper.set(Role::getRoleDescription, roleUpdate.getRoleDescription());
-        }
-
-        wrapper.eq(Role::getRoleId, roleId);
+        LambdaUpdateWrapper<Role> wrapper = Wrappers.<Role>lambdaUpdate()
+                .set(StringUtils.isNotBlank(roleUpdate.getRoleName()), Role::getRoleName, roleUpdate.getRoleName())
+                .set(StringUtils.isNotBlank(roleUpdate.getRoleCode()), Role::getRoleCode, roleUpdate.getRoleCode())
+                .set(StringUtils.isNotBlank(roleUpdate.getRoleDescription()),
+                        Role::getRoleDescription, roleUpdate.getRoleDescription())
+                .eq(Role::getRoleId, roleId);
         this.roleMapper.update(null, wrapper);
 
         return this.getRole(roleId);
@@ -215,87 +264,25 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     public void deleteRole(Long roleId) {
-        if (roleId == null) {
-            return;
+        if (roleId != null) {
+            this.userRoleMapper.delete(Wrappers.<UserRole>lambdaQuery().eq(UserRole::getRoleId, roleId));
+            this.roleMapper.delete(Wrappers.<Role>lambdaQuery().eq(Role::getRoleId, roleId));
+            this.rolePermMapper.delete(Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, roleId));
         }
-        this.userRoleMapper.delete(Wrappers.<UserRole>lambdaQuery().eq(UserRole::getRoleId, roleId));
-        this.roleMapper.delete(Wrappers.<Role>lambdaQuery().eq(Role::getRoleId, roleId));
-        this.rolePermMapper.delete(Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, roleId));
-    }
-
-    @Override
-    public void bindRole(Long bindId, List<Long> roleIdList) {
-        if (bindId == null) {
-            throw new ServiceException("服务关系ID不能为空");
-        }
-        if (CollectionUtils.isEmpty(roleIdList)) {
-            throw new ServiceException("角色ID不能为空");
-        }
-
-        // 移除role表中不存在的roleId
-        List<Role> roleDos =
-                this.roleMapper.selectList(Wrappers.<Role>lambdaQuery().in(Role::getRoleId, roleIdList));
-        List<Long> roleIdInDbr = roleDos.stream().map(Role::getRoleId).collect(Collectors.toList());
-        List<Long> filter1 = roleIdList.stream().filter(roleIdInDbr::contains).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(filter1)) {
-            return;
-        }
-
-        // 移除role_perm表中存在的permId
-        List<UserRole> userRoleDos = this.userRoleMapper.selectList(Wrappers.<UserRole>lambdaQuery()
-                .eq(UserRole::getBindId, bindId).in(UserRole::getRoleId, filter1));
-        List<Long> roleIdInDbbr = userRoleDos.stream().map(UserRole::getRoleId).collect(Collectors.toList());
-        List<Long> filter2 = filter1.stream().filter(id -> !roleIdInDbbr.contains(id)).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(filter2)) {
-            return;
-        }
-
-        // 绑定角色权限
-        List<UserRole> userRoleList = filter2.stream().map(roleId -> UserRole.builder()
-                .userRoleId(this.idApi.getId(IdEnums.USER_ROLE_ID.getKey()))
-                .bindId(bindId).roleId(roleId).build()).collect(Collectors.toList());
-        this.bindingRoleServiceMapper.saveBatch(userRoleList);
-
-    }
-
-    @Override
-    public void unBindRole(Long bindId, List<Long> roleIdList) {
-        if (bindId == null) {
-            throw new ServiceException("服务关系ID不能为空");
-        }
-        if (CollectionUtils.isEmpty(roleIdList)) {
-            throw new ServiceException("角色ID不能为空");
-        }
-        this.userRoleMapper.delete(Wrappers.<UserRole>lambdaQuery().eq(UserRole::getBindId, bindId)
-                .in(UserRole::getRoleId, roleIdList));
-    }
-
-    @Override
-    public void emptyRole(Long bindId) {
-        if (bindId == null) {
-            throw new ServiceException("服务关系ID不能为空");
-        }
-        this.userRoleMapper.delete(Wrappers.<UserRole>lambdaQuery().eq(UserRole::getBindId, bindId));
-    }
-
-    @Override
-    public void reBindRole(Long bindId, List<Long> roleIdList) {
-        this.emptyRole(bindId);
-        this.bindRole(bindId, roleIdList);
     }
 
     @Override
     public RoleBO getRole(Long roleId) {
-        Role roleDO = this.roleMapper.selectOne(Wrappers.<Role>lambdaQuery().eq(Role::getRoleId, roleId));
-        if (roleDO == null) {
+        Role role = this.roleMapper.selectOne(Wrappers.<Role>lambdaQuery().eq(Role::getRoleId, roleId));
+        if (role == null) {
             return null;
         }
 
-        RoleBO bo = RoleMapping.INSTANCE.to(roleDO);
+        RoleBO bo = RoleMapstruct.INSTANCE.to(role);
 
         // 查询 RolePerm
         List<RolePerm> rolePerms = this.rolePermMapper.selectList(
-                Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, roleDO.getRoleId()));
+                Wrappers.<RolePerm>lambdaQuery().eq(RolePerm::getRoleId, role.getRoleId()));
         List<Long> permIds = rolePerms.stream().map(RolePerm::getPermId).distinct().collect(Collectors.toList());
 
         // 查询 Perm
@@ -310,12 +297,24 @@ public class RbacServiceImpl implements RbacService {
     }
 
     @Override
+    public RoleBO getRole(String roleName, String roleCode) {
+        if (StringUtils.isBlank(roleName) || StringUtils.isBlank(roleCode)) {
+            return null;
+        }
+        LambdaQueryWrapper<Role> wrapper = Wrappers.<Role>lambdaQuery()
+                .eq(StringUtils.isBlank(roleName), Role::getRoleName, roleName)
+                .eq(StringUtils.isBlank(roleCode), Role::getRoleCode, roleCode);
+        Role role = this.roleMapper.selectOne(wrapper);
+        return role == null ? null : RoleMapstruct.INSTANCE.to(role);
+    }
+
+    @Override
     public List<RoleBO> getRoles(List<Long> roleIds) {
         if (CollectionUtils.isEmpty(roleIds)) {
             return new ArrayList<>();
         }
-        List<Role> roleDos = this.roleMapper.selectList(Wrappers.<Role>lambdaQuery().in(Role::getRoleId, roleIds));
-        List<RoleBO> roleBos = RoleMapping.INSTANCE.to(roleDos);
+        List<Role> roles = this.roleMapper.selectList(Wrappers.<Role>lambdaQuery().in(Role::getRoleId, roleIds));
+        List<RoleBO> roleBos = RoleMapstruct.INSTANCE.to(roles);
 
         Map<Long, List<PermBO>> permMapByRoleIds = this.getPermMapByRoleIds(roleIds);
 
@@ -336,36 +335,118 @@ public class RbacServiceImpl implements RbacService {
         return roles.stream().collect(Collectors.toMap(RoleBO::getRoleId, Function.identity(), (a, b) -> a));
     }
 
+    // ---------------- user_role ----------------
+
     @Override
-    public List<RoleBO> getRolesByBindIds(Long bindId) {
-        Map<Long, List<RoleBO>> roleMapByBindIds = this.getRoleMapByBindIds(Collections.singletonList(bindId));
-        return roleMapByBindIds.getOrDefault(bindId, new ArrayList<>());
+    public void bindRole(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                         @Valid @NotEmpty(message = "角色ID不能为空") List<Long> roleIdList) {
+        // 移除 role 表中不存在的 roleId
+        List<Long> roleIdInR = this.roleMapper.selectList(Wrappers.<Role>lambdaQuery().in(Role::getRoleId, roleIdList))
+                .stream().map(Role::getRoleId).collect(Collectors.toList());
+        List<Long> filter1 = roleIdList.stream().filter(roleIdInR::contains).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(filter1)) {
+            return;
+        }
+
+        // 移除 user_role 表中存在的 roleId
+        List<Long> roleIdInUr = this.userRoleMapper.selectList(Wrappers.<UserRole>lambdaQuery()
+                .eq(UserRole::getUserId, userId).in(UserRole::getRoleId, filter1))
+                .stream().map(UserRole::getRoleId).collect(Collectors.toList());
+        List<Long> filter2 = filter1.stream().filter(id -> !roleIdInUr.contains(id)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(filter2)) {
+            return;
+        }
+
+        // 绑定用户角色
+        List<UserRole> userRoleList = filter2.stream().map(roleId -> UserRole.builder()
+                .userRoleId(this.idApi.getId(IdEnums.USER_ROLE_ID.getKey()))
+                .userId(userId).roleId(roleId).build()).collect(Collectors.toList());
+        userRoleList.forEach(ur -> this.userRoleMapper.insert(ur));
+
     }
 
     @Override
-    public Map<Long, List<RoleBO>> getRoleMapByBindIds(List<Long> bindIdList) {
-        if (CollectionUtils.isEmpty(bindIdList)) {
+    public void unBindRole(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                           @Valid @NotEmpty(message = "角色ID不能为空") List<Long> roleIdList) {
+        this.userRoleMapper.delete(
+                Wrappers.<UserRole>lambdaQuery().eq(UserRole::getUserId, userId).in(UserRole::getRoleId, roleIdList));
+    }
+
+    @Override
+    public void emptyRole(Long userId) {
+        this.userRoleMapper.delete(Wrappers.<UserRole>lambdaQuery().eq(UserRole::getUserId, userId));
+    }
+
+    @Override
+    public void reBindRole(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                           @Valid @NotEmpty(message = "角色ID不能为空") List<Long> roleIdList) {
+        this.emptyRole(userId);
+        this.bindRole(userId, roleIdList);
+    }
+
+    @Override
+    public List<RoleBO> getRolesByUserIds(Long userId) {
+        Map<Long, List<RoleBO>> roleMapByUserIds = this.getRoleMapByUserIds(Collections.singletonList(userId));
+        return roleMapByUserIds.getOrDefault(userId, new ArrayList<>());
+    }
+
+    @Override
+    public Map<Long, List<RoleBO>> getRoleMapByUserIds(List<Long> userIdList) {
+        if (CollectionUtils.isEmpty(userIdList)) {
             return new HashMap<>(16);
         }
 
-        List<UserRole> userRoleDos = this.userRoleMapper.selectList(
-                Wrappers.<UserRole>lambdaQuery().in(UserRole::getBindId, bindIdList));
-        Map<Long, List<Long>> bindRoleMap = userRoleDos.stream().collect(
-                Collectors.groupingBy(
-                        UserRole::getBindId, Collectors.mapping(UserRole::getRoleId, Collectors.toList())
-                ));
+        List<UserRole> userRoles = this.userRoleMapper.selectList(
+                Wrappers.<UserRole>lambdaQuery().in(UserRole::getUserId, userIdList));
+        Map<Long, List<Long>> userRoleMap = LambdaHelper.groupMapList(userRoles,
+                UserRole::getUserId, UserRole::getRoleId);
         List<Long> roleIds =
-                userRoleDos.stream().map(UserRole::getRoleId).distinct().collect(Collectors.toList());
+                userRoles.stream().map(UserRole::getRoleId).distinct().collect(Collectors.toList());
 
         Map<Long, RoleBO> roleMap = this.getRoleMap(roleIds);
         Map<Long, List<RoleBO>> result = new HashMap<>(16);
-        bindRoleMap.forEach((bindId, roleIdList) -> {
+        userRoleMap.forEach((userId, roleIdList) -> {
             List<RoleBO> tmpRoles =
                     roleIdList.stream().map(roleMap::get).filter(Objects::nonNull).collect(Collectors.toList());
-            result.put(bindId, tmpRoles);
+            result.put(userId, tmpRoles);
         });
 
         return result;
+    }
+
+    @Override
+    public boolean hasRoleForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                                  @Valid @NotNull(message = "角色ID不能为空") Long roleId) {
+        Integer integer = this.userRoleMapper.selectCount(Wrappers.<UserRole>lambdaQuery()
+                .eq(UserRole::getUserId, userId).eq(UserRole::getRoleId, roleId));
+        return integer != null && integer > 0;
+    }
+
+    @Override
+    public boolean hasRoleForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                                  String roleName, String roleCode) {
+        RoleBO role = this.getRole(roleName, roleCode);
+        if (role == null || role.getRoleId() == null) {
+            return false;
+        }
+        return this.hasRoleForUser(userId, role.getRoleId());
+    }
+
+    @Override
+    public boolean hasPermForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                                  @Valid @NotNull(message = "角色ID不能为空") Long permId) {
+        Integer integer = this.permMapper.countPermForUser(userId, permId);
+        return integer != null && integer > 0;
+    }
+
+    @Override
+    public boolean hasPermForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId,
+                                  String permName, String permCode) {
+        PermBO perm = this.getPerm(permName, permCode);
+        if (perm == null) {
+            return false;
+        }
+        return this.hasPermForUser(userId, perm.getPermId());
     }
 
 }

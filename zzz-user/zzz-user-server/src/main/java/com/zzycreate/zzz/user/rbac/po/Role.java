@@ -25,6 +25,7 @@ import lombok.ToString;
 @TableName(value = "t_rbac_role")
 public class Role extends Base {
 
+    private static final long serialVersionUID = 2636126983637502845L;
     /**
      * 角色ID（业务编号）
      */

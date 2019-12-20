@@ -25,6 +25,7 @@ import lombok.ToString;
 @TableName(value = "t_rbac_perm")
 public class Perm extends Base {
 
+    private static final long serialVersionUID = 5455199071680168787L;
     /**
      * 权限ID（业务编号）
      */

@@ -25,6 +25,7 @@ import lombok.ToString;
 @TableName(value = "t_rbac_role_perm")
 public class RolePerm extends Base {
 
+    private static final long serialVersionUID = 5015718291066712787L;
     /**
      * 角色权限关联ID（关联ID）
      */

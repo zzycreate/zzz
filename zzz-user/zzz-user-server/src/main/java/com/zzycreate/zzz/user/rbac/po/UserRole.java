@@ -25,6 +25,7 @@ import lombok.ToString;
 @TableName(value = "t_rbac_user_role")
 public class UserRole extends Base {
 
+    private static final long serialVersionUID = 2937571840736667347L;
     /**
      * 角色权限关联ID（关联ID）
      */
@@ -33,8 +34,8 @@ public class UserRole extends Base {
     /**
      * 角色ID
      */
-    @TableField(value = "bind_id")
-    private Long bindId;
+    @TableField(value = "user_id")
+    private Long userId;
     /**
      * 权限ID
      */

@@ -131,7 +131,7 @@ public class RbacController {
     @GetMapping("/bindings/{bindingId}/roles")
     @ApiOperation(value = "获取服务关系的角色")
     public Result<List<RoleBO>> getRolesByBindingId(@PathVariable Long bindingId) {
-        List<RoleBO> roles = this.rbacService.getRolesByBindIds(bindingId);
+        List<RoleBO> roles = this.rbacService.getRolesByUserIds(bindingId);
         return Result.success4data(roles);
     }
 
