@@ -46,15 +46,5 @@ public class Role extends Base {
      */
     @TableField(value = "role_description")
     private String roleDescription;
-    /**
-     * 是否默认角色
-     */
-    @TableField(value = "default_role")
-    private Integer defaultRole;
-    /**
-     * 角色所属客户(系统角色SYSTEM)
-     */
-    @TableField(value = "cust_no")
-    private String custNo;
 
 }

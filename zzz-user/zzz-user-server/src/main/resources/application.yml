@@ -20,7 +20,7 @@ spring:
       test-on-borrow: false
       test-on-return: false
       pool-prepared-statements: false
-      filters: stat,wall
+      filters: stat,wall,slf4j
       filter:
         config:
           enabled: true
@@ -36,4 +36,5 @@ zf:
     leaf: http://localhost:9080
 logging:
   level:
-    "com.zzycreate.zf.feign.IdApi": INFO
+    "druid.sql.Statement": DEBUG
+    "com.zzycreate.zf.feign.IdApi": DEBUG

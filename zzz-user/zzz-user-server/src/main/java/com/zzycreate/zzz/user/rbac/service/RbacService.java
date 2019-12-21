@@ -7,9 +7,6 @@ import com.zzycreate.zzz.user.rbac.bo.RoleBO;
 import com.zzycreate.zzz.user.rbac.bo.RoleCreateBO;
 import com.zzycreate.zzz.user.rbac.bo.RoleUpdateBO;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +24,7 @@ public interface RbacService {
      * @param permCreate 新增的权限信息
      * @return PermBO
      */
-    PermBO addPerm(@Valid PermCreateBO permCreate);
+    PermBO addPerm(PermCreateBO permCreate);
 
     /**
      * 更新权限项
@@ -36,7 +33,7 @@ public interface RbacService {
      * @param permUpdate 更新的权限信息
      * @return PermBO
      */
-    PermBO updatePerm(@Valid @NotNull(message = "权限ID不能为空") Long permId, PermUpdateBO permUpdate);
+    PermBO updatePerm(Long permId, PermUpdateBO permUpdate);
 
     /**
      * 移除权限项
@@ -93,8 +90,7 @@ public interface RbacService {
      * @param roleId     角色ID
      * @param permIdList 待绑定的权限ID
      */
-    void bindPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
-                  @Valid @NotEmpty(message = "权限ID不能为空") List<Long> permIdList);
+    void bindPerm(Long roleId, List<Long> permIdList);
 
     /**
      * 给角色解绑指定的权限关系
@@ -102,15 +98,14 @@ public interface RbacService {
      * @param roleId     角色ID
      * @param permIdList 待解绑的权限ID
      */
-    void unBindPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
-                    @Valid @NotEmpty(message = "权限ID不能为空") List<Long> permIdList);
+    void unBindPerm(Long roleId, List<Long> permIdList);
 
     /**
      * 清空角色的权限绑定关系
      *
      * @param roleId 角色ID
      */
-    void emptyPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId);
+    void emptyPerm(Long roleId);
 
     /**
      * 重新给角色指定的权限关系，会首先清除绑定权限
@@ -118,8 +113,7 @@ public interface RbacService {
      * @param roleId     角色ID
      * @param permIdList 待绑定的权限ID
      */
-    void reBindPerm(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
-                    @Valid @NotEmpty(message = "权限ID不能为空") List<Long> permIdList);
+    void reBindPerm(Long roleId, List<Long> permIdList);
 
     /**
      * 查询角色的权限信息
@@ -144,8 +138,7 @@ public interface RbacService {
      * @param permId 权限ID
      * @return boolean
      */
-    boolean hasPermForRole(@Valid @NotNull(message = "角色ID不能为空") Long roleId,
-                           @Valid @NotNull(message = "权限ID不能为空") Long permId);
+    boolean hasPermForRole(Long roleId, Long permId);
 
     /**
      * 检查角色是否拥有指定权限
@@ -155,7 +148,7 @@ public interface RbacService {
      * @param permCode 权限编码
      * @return boolean
      */
-    boolean hasPermForRole(@Valid @NotNull(message = "角色ID不能为空") Long roleId, String permName, String permCode);
+    boolean hasPermForRole(Long roleId, String permName, String permCode);
 
     // ---------------- role ----------------
 
@@ -165,7 +158,7 @@ public interface RbacService {
      * @param roleCreate 新增的角色信息
      * @return RoleBO
      */
-    RoleBO addRole(@Valid RoleCreateBO roleCreate);
+    RoleBO addRole(RoleCreateBO roleCreate);
 
     /**
      * 更新角色信息
@@ -174,7 +167,7 @@ public interface RbacService {
      * @param roleUpdate 更新的角色信息
      * @return RoleBO
      */
-    RoleBO updateRole(@Valid @NotNull(message = "角色ID不能为空") Long roleId, RoleUpdateBO roleUpdate);
+    RoleBO updateRole(Long roleId, RoleUpdateBO roleUpdate);
 
     /**
      * 移除角色
@@ -224,8 +217,7 @@ public interface RbacService {
      * @param userId     用户ID
      * @param roleIdList 带绑定的角色ID
      */
-    void bindRole(@Valid @NotNull(message = "用户ID不能为空") Long userId,
-                  @Valid @NotEmpty(message = "角色ID不能为空") List<Long> roleIdList);
+    void bindRole(Long userId, List<Long> roleIdList);
 
     /**
      * 解除角色绑定
@@ -233,8 +225,7 @@ public interface RbacService {
      * @param userId     用户ID
      * @param roleIdList 带解绑的角色ID
      */
-    void unBindRole(@Valid @NotNull(message = "用户ID不能为空") Long userId,
-                    @Valid @NotEmpty(message = "角色ID不能为空") List<Long> roleIdList);
+    void unBindRole(Long userId, List<Long> roleIdList);
 
     /**
      * 清空用户的角色绑定关系
@@ -249,8 +240,7 @@ public interface RbacService {
      * @param userId     用户ID
      * @param roleIdList 带绑定的角色ID
      */
-    void reBindRole(@Valid @NotNull(message = "用户ID不能为空") Long userId,
-                    @Valid @NotEmpty(message = "角色ID不能为空") List<Long> roleIdList);
+    void reBindRole(Long userId, List<Long> roleIdList);
 
     /**
      * 查询用户的角色
@@ -275,8 +265,7 @@ public interface RbacService {
      * @param roleId 角色ID
      * @return boolean
      */
-    boolean hasRoleForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId,
-                           @Valid @NotNull(message = "角色ID不能为空") Long roleId);
+    boolean hasRoleForUser(Long userId, Long roleId);
 
     /**
      * 检查用户是否拥有指定角色
@@ -286,7 +275,7 @@ public interface RbacService {
      * @param roleCode 角色编码
      * @return boolean
      */
-    boolean hasRoleForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId, String roleName, String roleCode);
+    boolean hasRoleForUser(Long userId, String roleName, String roleCode);
 
     /**
      * 检查用户是否拥有指定权限
@@ -295,8 +284,7 @@ public interface RbacService {
      * @param permId 权限ID
      * @return boolean
      */
-    boolean hasPermForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId,
-                           @Valid @NotNull(message = "角色ID不能为空") Long permId);
+    boolean hasPermForUser(Long userId, Long permId);
 
     /**
      * 检查用户是否拥有指定权限
@@ -306,7 +294,7 @@ public interface RbacService {
      * @param permCode 权限编码
      * @return boolean
      */
-    boolean hasPermForUser(@Valid @NotNull(message = "用户ID不能为空") Long userId, String permName, String permCode);
+    boolean hasPermForUser(Long userId, String permName, String permCode);
 
 
 }

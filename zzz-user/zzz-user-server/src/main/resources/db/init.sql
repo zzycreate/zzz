@@ -59,3 +59,4 @@ CREATE TABLE `t_rbac_user_role`
     UNIQUE INDEX `uk_br_bri` (`user_role_id`) USING BTREE,
     UNIQUE INDEX `uk_br_bi_ri` (`user_id`, `role_id`) USING BTREE
 ) COMMENT '用户角色关联表';
+
