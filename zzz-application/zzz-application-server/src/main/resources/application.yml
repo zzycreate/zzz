@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: zzz-application
+zf:
+  feign:
+    url:
+      kdn:
+        trackQuery: http://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx
+logging:
+  level:
+    "druid.sql.Statement": DEBUG
+    "com.zzycreate.zzz.application.kdn.KdnTrackQueryApi": DEBUG
+kdn:
+  businessid: xxxxxxx
+  appkey: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

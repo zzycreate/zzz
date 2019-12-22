@@ -23,13 +23,10 @@ public class IdApiTest extends BaseNgTest {
 
     @Test
     public void getId() {
-        Long id = this.idApi.getId("zzz-user_test-id");
+        String id = this.idApi.getId("zzz-user_test-id");
         log.info("{}", id);
         assertNotNull(id);
+        assertTrue(StringUtils.isNotBlank(id));
 
-        String strId = this.idApi.getStrId("zzz-user_test-id");
-        log.info("{}", strId);
-        assertNotNull(strId);
-        assertTrue(StringUtils.isNotBlank(strId));
     }
 }

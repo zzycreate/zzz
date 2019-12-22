@@ -33,7 +33,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 zf:
   feign:
-    leaf: http://localhost:9080
+    url:
+      leaf: http://localhost:9080
 logging:
   level:
     "druid.sql.Statement": DEBUG
