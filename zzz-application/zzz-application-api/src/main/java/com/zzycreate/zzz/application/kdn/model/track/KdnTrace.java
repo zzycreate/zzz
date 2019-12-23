@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author zzycreate
  * @date 2019/12/22
@@ -14,8 +16,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KdnTrace {
+public class KdnTrace implements Serializable {
 
+    private static final long serialVersionUID = 3374370723786469524L;
     /**
      * 时间
      */

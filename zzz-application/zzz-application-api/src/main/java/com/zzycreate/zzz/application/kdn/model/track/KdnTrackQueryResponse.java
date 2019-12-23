@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -16,8 +17,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KdnTrackQueryResponse {
+public class KdnTrackQueryResponse implements Serializable {
 
+    private static final long serialVersionUID = 700183753928241190L;
     /**
      * 快递公司编码 	R
      */

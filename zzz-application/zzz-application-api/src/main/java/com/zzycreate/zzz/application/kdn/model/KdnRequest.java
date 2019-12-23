@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author zzycreate
  * @date 2019/12/22
@@ -14,8 +16,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KdnRequest {
+public class KdnRequest implements Serializable {
 
+    private static final long serialVersionUID = 1904630499893698274L;
     /**
      * 请求内容需进行URL(utf-8)编码。请求内容JSON格式，须和DataType一致。
      */
