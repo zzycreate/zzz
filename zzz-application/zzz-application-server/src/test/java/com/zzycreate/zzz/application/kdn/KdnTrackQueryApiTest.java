@@ -2,7 +2,7 @@ package com.zzycreate.zzz.application.kdn;
 
 import com.zzycreate.zzz.application.BaseNgTest;
 import com.zzycreate.zzz.application.kdn.model.KdnRequest;
-import com.zzycreate.zzz.application.kdn.model.KdnRequestFactory;
+import com.zzycreate.zzz.application.kdn.model.factory.KdnRequestFactory;
 import com.zzycreate.zzz.application.kdn.model.track.KdnTrackQuery;
 import com.zzycreate.zzz.application.kdn.model.track.KdnTrackQueryResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -10,11 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.testng.annotations.Test;
 
 import javax.annotation.Resource;
-
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * @author zzycreate

@@ -6,10 +6,16 @@ zf:
     url:
       kdn:
         trackQuery: http://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx
+      sf:
+        trackQuery: http://bsp-oisp.sf-express.com/bsp-oisp/sfexpressService
 logging:
   level:
     "druid.sql.Statement": DEBUG
     "com.zzycreate.zzz.application.kdn.KdnTrackQueryApi": DEBUG
+    "com.zzycreate.zzz.application.sf.SfTrackQueryApi": DEBUG
 kdn:
   businessid: xxxxxxx
   appkey: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+sf:
+  code: xxxxxxxx
+  checkword: xxxxxxxxxxxxxxxxxxxxxxxx

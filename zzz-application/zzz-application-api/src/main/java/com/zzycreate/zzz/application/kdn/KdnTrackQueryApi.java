@@ -1,7 +1,7 @@
 package com.zzycreate.zzz.application.kdn;
 
 import com.zzycreate.zzz.application.kdn.model.KdnRequest;
-import com.zzycreate.zzz.application.kdn.model.KdnRequestFactory;
+import com.zzycreate.zzz.application.kdn.model.factory.KdnRequestFactory;
 import com.zzycreate.zzz.application.kdn.model.track.KdnTrackQuery;
 import com.zzycreate.zzz.application.kdn.model.track.KdnTrackQueryResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author zzycreate
  * @date 2019/12/22
  */
-@FeignClient(value = "kdn", contextId = "trackQuery", url = "${zf.feign.url.kdn.trackQuery}")
+@FeignClient(value = "kdn", contextId = "kdnTrackQuery", url = "${zf.feign.url.kdn.trackQuery}")
 public interface KdnTrackQueryApi {
 
     /**

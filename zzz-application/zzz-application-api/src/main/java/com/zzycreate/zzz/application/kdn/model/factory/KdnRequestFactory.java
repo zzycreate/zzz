@@ -1,5 +1,6 @@
-package com.zzycreate.zzz.application.kdn.model;
+package com.zzycreate.zzz.application.kdn.model.factory;
 
+import com.zzycreate.zzz.application.kdn.model.KdnRequest;
 import com.zzycreate.zzz.application.kdn.model.track.KdnTrackQuery;
 import com.zzycreate.zzz.utils.JacksonHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +34,7 @@ public class KdnRequestFactory {
 
     public static KdnRequest buildTrackQueryRequest(KdnTrackQuery trackQuery, String eBusinessId, String appKey)
             throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        return build(trackQuery, eBusinessId, appKey, "1002", "2");
+        return build(trackQuery, eBusinessId, appKey, "8001", "2");
     }
 
 
